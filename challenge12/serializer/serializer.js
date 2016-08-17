@@ -6,7 +6,6 @@ const InfluxUtil = require('./influxUtil');
 
 const seneca = module.exports.seneca = Seneca();
 
-
 const createDatabase = function (cb) {
   setTimeout(() => {
     const initDb = Influx({host: process.env.INFLUX_HOST, username: 'root', password: 'root'});
@@ -20,19 +19,17 @@ const createDatabase = function (cb) {
   }, 3000);
 };
 
-
 createDatabase(() => {
-  const db = Influx({host: process.env.INFLUX_HOST, username: 'root', password: 'root', database: 'temperature'});
+  const db = Influx({ host: process.env.INFLUX_HOST, username: 'root', password: 'root', database: 'temperature' });
   const ifx = InfluxUtil(db);
 
-  seneca.add({role: 'serialize', cmd: 'read'}, (args, cb) => {
+  seneca.add({ role: 'serialize', cmd: 'read' }, (args, cb) => {
     ifx.readPoints(args.sensorId, args.start, args.end, cb);
   });
 
-
-  seneca.add({role: 'serialize', cmd: 'write'}, (args, cb) => {
+  seneca.add({ role: 'serialize', cmd: 'write' }, (args, cb) => {
     ifx.writePoint(args.sensorId, args.temperature, cb);
   });
 
-  seneca.listen({port: process.env.SERIALIZER_PORT});
+  seneca.listen({ port: 8000 });
 });

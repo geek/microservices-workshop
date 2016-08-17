@@ -1,0 +1,10 @@
+{
+  "consul": "consul:8500",
+  "backends": [
+    {
+      "name": "broker",
+      "poll": 3,
+      "onChange": "/usr/local/bin/reload.sh"
+    }
+  ]
+}

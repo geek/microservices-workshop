@@ -2,29 +2,37 @@
 
 const Mosca = require('mosca');
 const Seneca = require('seneca');
+const Consul = require('./consul');
 
 
-const server = new Mosca.Server({});
-const seneca = Seneca();
-seneca.client({
-  host: process.env.SERIALIZER_HOST,
-  port: process.env.SERIALIZER_PORT,
-  pin: {
-    role: 'serialize', cmd: 'write'
+Consul.getService('serializer', (err, serializer) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
   }
+  const server = new Mosca.Server({ port: 8000 });
+  const seneca = Seneca();
+  seneca.client({
+    host: serializer.address,
+    port: serializer.port,
+    pin: {
+      role: 'serialize', cmd: 'write'
+    }
+  });
+
+  server.published = (packet, client, cb) => {
+    if (!packet.topic.match(/temperature\/[0-9]+\/read/)) {
+      return cb();
+    }
+
+    const body = parse(packet.payload);
+
+    body.role = 'serialize';
+    body.cmd = 'write';
+    seneca.act(body, cb);
+  };
 });
 
-server.published = (packet, client, cb) => {
-  if (!packet.topic.match(/temperature\/[0-9]+\/read/)) {
-    return cb();
-  }
-
-  const body = parse(packet.payload);
-
-  body.role = 'serialize';
-  body.cmd = 'write';
-  seneca.act(body, cb);
-};
 
 function parse (body) {
   try {

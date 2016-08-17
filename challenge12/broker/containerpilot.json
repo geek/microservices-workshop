@@ -1,0 +1,19 @@
+{
+  "consul": "consul:8500",
+  "services": [
+    {
+      "name": "broker",
+      "port": 8000,
+      "health": "node /opt/status.js",
+      "poll": 3,
+      "ttl": 10
+    }
+  ],
+  "backends": [
+    {
+      "name": "serializer",
+      "poll": 3,
+      "onChange": "/usr/local/bin/reload.sh"
+    }
+  ]
+}

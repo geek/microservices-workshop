@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "mosca": "2.x.x",
+    "mqtt": "1.x.x",
     "seneca": "2.x.x"
   }
 }
