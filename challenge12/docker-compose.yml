@@ -1,9 +1,10 @@
 version: "2"
 services:
   nginx:
+    container_name: nginx
     build: nginx
     ports:
-      - 80
+      - "80"
     links:
       - consul:consul
     depends_on:
@@ -15,24 +16,27 @@ services:
       nginx -g "daemon off;"
   consul:
       image: progrium/consul:latest
-      command: -server -bootstrap -ui-dir /ui
+      container_name: consul
+      command: -server -bootstrap -node docker -ui-dir /ui
       restart: always
       mem_limit: 128m
       ports:
-        - 8500
+        - "8500:8500"
+        - "8400:8400"
+        - "8600:53/udp"
       dns:
         - 127.0.0.1
   influx:
     image: tutum/influxdb
     container_name: influx
-    volumes:
-      - "./data:/data"
+    restart: always
     ports:
       - 8086:8086
       - 8083:8083
   serializer:
     build: serializer
     env_file: ./env.conf
+    restart: always
     links:
       - influx:influx
     ports:
@@ -42,33 +46,38 @@ services:
   broker:
     build: broker
     env_file: ./env.conf
+    restart: always
     links:
       - serializer:serializer
     ports:
-      - "1883"
+      - "8000"
     depends_on:
       - serializer
+      - consul
   sensor:
     build: sensor
     env_file: ./env.conf
+    restart: always
     links:
       - broker:broker
-    ports:
-      - "8000"
     depends_on:
       - broker
+      - consul
   actuator:
     build: actuator
     env_file: ./env.conf
+    restart: always
     links:
       - broker:broker
     ports:
       - "8000"
     depends_on:
       - broker
+      - consul
   frontend:
     build: frontend
     env_file: ./env.conf
+    restart: always
     links:
       - serializer:serializer
       - actuator:actuator
@@ -77,3 +86,4 @@ services:
     depends_on:
       - serializer
       - actuator
+      - consul

@@ -29,7 +29,6 @@ COPY containerpilot.json /etc/containerpilot.json
 ENV CONTAINERPILOT=file:///etc/containerpilot.json
 
 
-EXPOSE 8000
 CMD [ "/bin/containerpilot", \
       "node", \
       "/opt/app/sensor.js" \

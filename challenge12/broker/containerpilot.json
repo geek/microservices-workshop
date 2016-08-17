@@ -4,15 +4,15 @@
     {
       "name": "broker",
       "port": 8000,
-      "health": "node /opt/status.js",
-      "poll": 3,
-      "ttl": 10
+      "health": "node /opt/app/status.js",
+      "poll": 5,
+      "ttl": 100
     }
   ],
   "backends": [
     {
       "name": "serializer",
-      "poll": 3,
+      "poll": 5,
       "onChange": "/usr/local/bin/reload.sh"
     }
   ]

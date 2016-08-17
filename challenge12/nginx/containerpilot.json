@@ -1,6 +1,6 @@
 {
   "consul": "consul:8500",
-  "preStart": "/bin/reload-nginx.sh preStart",
+  "preStart": "/bin/reload.sh preStart",
   "logging": {
     "level": "DEBUG",
     "format": "text"
@@ -19,7 +19,7 @@
     {
       "name": "frontend",
       "poll": 3,
-      "onChange": "/bin/reload-nginx.sh onChange"
+      "onChange": "/bin/reload.sh onChange"
     }
   ]
 }

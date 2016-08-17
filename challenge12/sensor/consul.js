@@ -20,6 +20,10 @@ exports.getService = function (name, callback) {
       return callback(err);
     }
 
+    if (!hosts || !Object.keys(hosts).length) {
+      return callback(new Error(`Service ${name} couldn't be found`));
+    }
+
     internals.hosts[name] = hosts;
     callback(null, internals.selectNext(internals.hosts[name]));
   });
@@ -31,7 +35,7 @@ exports.getServices = internals.getServices = function (name, callback) {
     host: process.env.CONSUL_HOST || 'consul',
     port: process.env.CONSUL_PORT || 8500,
     path: `/v1/health/service/${name}?passing&near=agent`
-  }, (res) => {
+  }, (response) => {
     let result = '';
     response.on('data', (data) => { result += data.toString(); });
     response.on('end', () => {

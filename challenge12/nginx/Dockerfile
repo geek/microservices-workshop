@@ -23,7 +23,7 @@ RUN export CP_SHA1=198d96c8d7bfafb1ab6df96653c29701510b833c \
 
 # add ContainerPilot configuration and onChange handler
 COPY containerpilot.json /etc/containerpilot/
-COPY reload-nginx.sh /bin
+COPY reload.sh /bin
 
 # add static Nginx content
 COPY index.* /usr/share/nginx/html/

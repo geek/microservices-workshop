@@ -10,14 +10,16 @@ Consul.getService('serializer', (err, serializer) => {
     console.error(err);
     process.exit(1);
   }
+
   const server = new Mosca.Server({ port: 8000 });
   const seneca = Seneca();
   seneca.client({
     host: serializer.address,
-    port: serializer.port,
-    pin: {
-      role: 'serialize', cmd: 'write'
-    }
+    port: serializer.port
+  });
+
+  server.on('error', (err) => {
+    console.error(err);
   });
 
   server.published = (packet, client, cb) => {
