@@ -4,14 +4,19 @@
     {
       "name": "broker",
       "port": 8000,
-      "health": "node /opt/app/status.js",
-      "poll": 5,
-      "ttl": 100
+      "health": "/usr/bin/curl -o /dev/null --fail -s curl -X POST 'http://localhost:8000/act' -H 'Content-Type: application/json' -d '{ \"role\": \"seneca\", \"cmd\": \"stats\" }'",
+      "poll": 10,
+      "ttl": 25
     }
   ],
   "backends": [
     {
       "name": "serializer",
+      "poll": 5,
+      "onChange": "/usr/local/bin/reload.sh"
+    },
+    {
+      "name": "sensor",
       "poll": 5,
       "onChange": "/usr/local/bin/reload.sh"
     }

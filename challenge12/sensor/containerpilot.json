@@ -1,10 +1,12 @@
 {
   "consul": "consul:8500",
-  "backends": [
+  "services": [
     {
-      "name": "broker",
-      "poll": 3,
-      "onChange": "/usr/local/bin/reload.sh"
+      "name": "sensor",
+      "port": 8000,
+      "health": "/usr/bin/curl -o /dev/null --fail -s curl -X POST 'http://localhost:8000/act' -H 'Content-Type: application/json' -d '{ \"role\": \"seneca\", \"cmd\": \"stats\" }'",
+      "poll": 10,
+      "ttl": 25
     }
   ]
 }

@@ -24,7 +24,6 @@ RUN export CP_SHA1=198d96c8d7bfafb1ab6df96653c29701510b833c \
 
 
 # add ContainerPilot configuration and scripts
-COPY reload.sh /usr/local/bin/reload.sh
 COPY containerpilot.json /etc/containerpilot.json
 ENV CONTAINERPILOT=file:///etc/containerpilot.json
 

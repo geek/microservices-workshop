@@ -1,31 +1,32 @@
 version: "2"
 services:
   nginx:
-    container_name: nginx
     build: nginx
     ports:
-      - "80"
+      - "8080:80"
     links:
       - consul:consul
     depends_on:
       - consul
+      - frontend
     restart: always
     command: >
       /bin/containerpilot
       -config file:///etc/containerpilot/containerpilot.json
       nginx -g "daemon off;"
   consul:
-      image: progrium/consul:latest
-      container_name: consul
-      command: -server -bootstrap -node docker -ui-dir /ui
-      restart: always
-      mem_limit: 128m
-      ports:
-        - "8500:8500"
-        - "8400:8400"
-        - "8600:53/udp"
-      dns:
-        - 127.0.0.1
+    image: progrium/consul:latest
+    container_name: consul
+    command: -server -bootstrap -ui-dir /ui
+    hostname: "node1"
+    restart: always
+    mem_limit: 128m
+    ports:
+      - "8500:8500"
+      - "8400:8400"
+      - "8600:53/udp"
+    dns:
+      - 127.0.0.1
   influx:
     image: tutum/influxdb
     container_name: influx
@@ -48,27 +49,29 @@ services:
     env_file: ./env.conf
     restart: always
     links:
-      - serializer:serializer
+      - consul:consul
     ports:
       - "8000"
     depends_on:
       - serializer
+      - sensor
       - consul
   sensor:
     build: sensor
     env_file: ./env.conf
     restart: always
     links:
-      - broker:broker
+      - consul:consul
+    ports:
+      - "8000"
     depends_on:
-      - broker
       - consul
   actuator:
     build: actuator
     env_file: ./env.conf
     restart: always
     links:
-      - broker:broker
+      - consul:consul
     ports:
       - "8000"
     depends_on:
@@ -79,8 +82,7 @@ services:
     env_file: ./env.conf
     restart: always
     links:
-      - serializer:serializer
-      - actuator:actuator
+      - consul:consul
     ports:
       - "8000"
     depends_on:

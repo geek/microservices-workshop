@@ -17,13 +17,13 @@ const internals = {};
 
 
 Consul.getService('serializer', (err, serializer) => {
-  if (err) {
-    console.error(err);
+  if (err || !serializer) {
+    console.log(err);
     process.exit(1);
   }
 
   Consul.getService('actuator', (err, actuator) => {
-    if (err) {
+    if (err || !actuator) {
       console.error(err);
       process.exit(1);
     }

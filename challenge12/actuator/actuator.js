@@ -2,24 +2,35 @@
 
 // Load modules
 
-const Mqtt = require('mqtt');
 const Seneca = require('seneca');
 const Consul = require('./consul');
 
-
-Consul.getService('broker', (err, broker) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
+let broker = {
+  act: function (cmd, cb) {
+    cb(null, {});
   }
+};
 
-  const mqtt = Mqtt.connect(`mqtt://${broker.address}:${broker.port}`);
-  const seneca = Seneca();
+const server = Seneca();
 
-  seneca.add({ role: 'actuate', cmd: 'set' }, (args, cb) => {
-    const payload = JSON.stringify({ 'offset': parseInt(args.offset, 10) });
-    mqtt.publish('temperature/1/set', new Buffer(payload), { qos: 0, retain: true }, cb);
+server.add({ role: 'actuate', cmd: 'set' }, (args, cb) => {
+  broker.act({ role: 'temperature', cmd: 'offset', offset: parseInt(args.offset, 10) }, cb);
+});
+
+server.listen({ port: 8000 });
+
+
+const loadBroker = function () {
+  Consul.getService('broker', (err, brokerService) => {
+    if (err || !brokerService) {
+      return;
+    }
+
+    const broker = Seneca().client({ host: brokerService.address, port: brokerService.port });
   });
+};
+loadBroker();
 
-  seneca.listen({ port: 8000 });
+process.on('SIGHUP', function () {
+  loadBroker();
 });

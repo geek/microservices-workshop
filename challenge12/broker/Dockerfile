@@ -1,15 +1,9 @@
 FROM alpine:3.4
 
-# install node, curl, and python
+# install node and curl
 RUN apk update && apk add \
     nodejs \
     curl \
-    python \
-    build-base \
-    gcc \
-    abuild \
-    binutils \
-    cmake \
     && rm -rf /var/cache/apk/*
 
 

@@ -40,7 +40,7 @@ exports.getServices = internals.getServices = function (name, callback) {
     response.on('data', (data) => { result += data.toString(); });
     response.on('end', () => {
       const hosts = [];
-      const parsed = JSON.parse(result);
+      const parsed = parse(result) || [];
       for (let i = 0; i < parsed.length; ++i) {
         hosts.push({
           address: parsed[i].Service.Address,
@@ -76,3 +76,12 @@ internals.selectNext = function (services) {
   oldest.executed = now;
   return oldest;
 };
+
+function parse (body) {
+  try {
+    return JSON.parse(body);
+  }
+  catch (err) {
+    return null;
+  }
+}
