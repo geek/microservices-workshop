@@ -24,9 +24,13 @@ let actuator = {
 };
 
 const loadSerializer = function () {
+  if (serializer.use) {
+    return;
+  }
+
   Consul.getService('serializer', (err, serializerService) => {
     if (err || !serializerService || !serializerService.port) {
-      return;
+      return retry(loadSerializer);
     }
 
     serializer = Seneca();
@@ -37,11 +41,14 @@ const loadSerializer = function () {
   });
 };
 
-
 const loadActuator = function () {
+  if (actuator.use) {
+    return;
+  }
+
   Consul.getService('actuator', (err, actuatorService) => {
     if (err || !actuatorService || !actuatorService.port) {
-      return;
+      return retry(loadActuator);
     }
 
     actuator = Seneca();
@@ -50,6 +57,12 @@ const loadActuator = function () {
       port: actuatorService.port
     });
   });
+};
+
+const retry = function (fn) {
+  setTimeout(() => {
+    fn();
+  }, 5000);
 };
 
 

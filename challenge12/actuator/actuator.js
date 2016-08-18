@@ -21,9 +21,13 @@ server.listen({ port: 8000 });
 
 
 const loadBroker = function () {
+  if (broker.use) {
+    return;
+  }
+
   Consul.getService('broker', (err, brokerService) => {
     if (err || !brokerService) {
-      return;
+      return retry(loadBroker);
     }
 
     const broker = Seneca().client({ host: brokerService.address, port: brokerService.port });
@@ -34,3 +38,9 @@ loadBroker();
 process.on('SIGHUP', function () {
   loadBroker();
 });
+
+const retry = function (fn) {
+  setTimeout(() => {
+    fn();
+  }, 5000);
+};

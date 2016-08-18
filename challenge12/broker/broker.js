@@ -19,9 +19,13 @@ let sensor = {
 };
 
 const loadSerializer = function () {
+  if (serializer.use) {
+    return;
+  }
+
   Consul.getService('serializer', (err, serializerService) => {
     if (err || !serializerService) {
-      return;
+      return retry(loadSerializer);
     }
 
     serializer = Seneca();
@@ -34,9 +38,13 @@ const loadSerializer = function () {
 
 
 const loadSensor = function () {
+  if (sensor.use) {
+    return;
+  }
+
   Consul.getService('sensor', (err, sensorService) => {
     if (err || !sensorService) {
-      return;
+      return retry(loadSensor);
     }
 
     sensor = Seneca();
@@ -47,6 +55,11 @@ const loadSensor = function () {
   });
 };
 
+const retry = function (fn) {
+  setTimeout(() => {
+    fn();
+  }, 5000);
+};
 
 const main = function () {
   loadSerializer();

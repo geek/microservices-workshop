@@ -21,10 +21,8 @@ services:
     hostname: "node1"
     restart: always
     mem_limit: 128m
-    ports:
-      - "8500:8500"
-      - "8400:8400"
-      - "8600:53/udp"
+    expose:
+      - "8500"
     dns:
       - 127.0.0.1
   influx:
@@ -32,15 +30,15 @@ services:
     container_name: influx
     restart: always
     ports:
-      - 8086:8086
-      - 8083:8083
+      - "8086:8086"
+      - "8083:8083"
   serializer:
     build: serializer
     env_file: ./env.conf
     restart: always
     links:
       - influx:influx
-    ports:
+    expose:
       - "8000"
     depends_on:
       - influx
@@ -50,7 +48,7 @@ services:
     restart: always
     links:
       - consul:consul
-    ports:
+    expose:
       - "8000"
     depends_on:
       - serializer
@@ -62,7 +60,7 @@ services:
     restart: always
     links:
       - consul:consul
-    ports:
+    expose:
       - "8000"
     depends_on:
       - consul
@@ -72,7 +70,7 @@ services:
     restart: always
     links:
       - consul:consul
-    ports:
+    expose:
       - "8000"
     depends_on:
       - broker
