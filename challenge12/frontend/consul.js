@@ -31,7 +31,7 @@ exports.getService = function (name, callback) {
 
 
 exports.getServices = internals.getServices = function (name, callback) {
-  Http.get({
+  const agent = Http.get({
     host: process.env.CONSUL_HOST || 'consul',
     port: process.env.CONSUL_PORT || 8500,
     path: `/v1/health/service/${name}?passing&near=agent`
@@ -51,6 +51,8 @@ exports.getServices = internals.getServices = function (name, callback) {
       callback(null, hosts);
     });
   });
+
+  agent.on('error', () => {});
 };
 
 

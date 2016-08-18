@@ -11,32 +11,51 @@ const Consul = require('./consul');
 const WebStream = require('./webStream');
 
 
-// Declare internals
-
-const internals = {};
-
-
-Consul.getService('serializer', (err, serializer) => {
-  if (err || !serializer) {
-    console.log(err);
-    process.exit(1);
+let serializer = {
+  act: function (cmd, cb) {
+    cb(null, {});
   }
+};
 
-  Consul.getService('actuator', (err, actuator) => {
-    if (err || !actuator) {
-      console.error(err);
-      process.exit(1);
+let actuator = {
+  act: function (cmd, cb) {
+    cb(null, {});
+  }
+};
+
+const loadSerializer = function () {
+  Consul.getService('serializer', (err, serializerService) => {
+    if (err || !serializerService || !serializerService.port) {
+      return;
     }
 
-    internals.main(serializer, actuator);
+    serializer = Seneca();
+    serializer.client({
+      host: serializerService.address,
+      port: serializerService.port
+    });
   });
-});
+};
 
 
-internals.main = function (serializer, actuator) {
-  const seneca = Seneca();
-  seneca.client({ host: serializer.address, port: serializer.port, pin: { role: 'serialize', cmd: 'read' } });
-  seneca.client({ host: actuator.address, port: actuator.port, pin: { role: 'actuate', cmd: 'set' } });
+const loadActuator = function () {
+  Consul.getService('actuator', (err, actuatorService) => {
+    if (err || !actuatorService || !actuatorService.port) {
+      return;
+    }
+
+    actuator = Seneca();
+    actuator.client({
+      host: actuatorService.address,
+      port: actuatorService.port
+    });
+  });
+};
+
+
+const main = function (serializer, actuator) {
+  loadSerializer();
+  loadActuator();
 
   const serverConfig = {
     connections: {
@@ -55,16 +74,16 @@ internals.main = function (serializer, actuator) {
       method: 'GET',
       path: '/set',
       handler: (request, reply) => {
-        seneca.act({
+        actuator.act({
           role: 'actuate',
-          cmd: 'set', offset:
-          request.query.offset
+          cmd: 'set',
+          offset: request.query.offset
         }, (err) => {
           if (err) {
             return reply({ result: err });
           }
 
-          reply({result: 'ok'});
+          reply({ result: 'ok' });
         });
       }
     });
@@ -86,7 +105,11 @@ internals.main = function (serializer, actuator) {
     let lastEmitted = 0;
     let i = 0;
     setInterval(() => {
-      seneca.act({
+      if (!serializer || !serializer.act) {
+        return;
+      }
+
+      serializer.act({
         role: 'serialize',
         cmd: 'read',
         sensorId: '1',
@@ -94,6 +117,10 @@ internals.main = function (serializer, actuator) {
         end: Moment().utc().format()
       }, (err, data) => {
         let toEmit = [];
+
+        if (err || !data || !data.length) {
+          return;
+        }
 
         data[0].forEach((point) => {
           if (Moment(point.time).unix() > lastEmitted) {
@@ -115,3 +142,4 @@ internals.main = function (serializer, actuator) {
     });
   });
 };
+main();
