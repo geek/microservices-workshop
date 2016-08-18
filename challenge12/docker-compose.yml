@@ -6,6 +6,7 @@ services:
       - "8080:80"
     links:
       - consul:consul
+      - frontend:frontend
     depends_on:
       - consul
       - frontend
@@ -21,14 +22,14 @@ services:
     hostname: "node1"
     restart: always
     mem_limit: 128m
-    expose:
-      - "8500"
+    ports:
+      - "8500:8500"
     dns:
       - 127.0.0.1
   influx:
     image: tutum/influxdb
-    container_name: influx
     restart: always
+    hostname: "node1"
     ports:
       - "8086:8086"
       - "8083:8083"

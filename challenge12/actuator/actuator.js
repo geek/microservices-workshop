@@ -11,6 +11,25 @@ let broker = {
   }
 };
 
+let loading = false;
+const loadBroker = function () {
+  if (broker.use || loading) {
+    return;
+  }
+
+  loading = true;
+  Consul.getService('broker', (err, brokerService) => {
+    if (err || !brokerService || !brokerService.address) {
+      return retry(loadBroker);
+    }
+
+    broker = Seneca().client({ host: brokerService.address, port: brokerService.port });
+    loading = false;
+  });
+};
+loadBroker();
+
+
 const server = Seneca();
 
 server.add({ role: 'actuate', cmd: 'set' }, (args, cb) => {
@@ -20,22 +39,13 @@ server.add({ role: 'actuate', cmd: 'set' }, (args, cb) => {
 server.listen({ port: 8000 });
 
 
-const loadBroker = function () {
-  if (broker.use) {
-    return;
-  }
-
-  Consul.getService('broker', (err, brokerService) => {
-    if (err || !brokerService) {
-      return retry(loadBroker);
-    }
-
-    const broker = Seneca().client({ host: brokerService.address, port: brokerService.port });
-  });
-};
-loadBroker();
-
 process.on('SIGHUP', function () {
+  broker = {
+    act: function (cmd, cb) {
+      cb(null, {});
+    }
+  };
+
   loadBroker();
 });
 

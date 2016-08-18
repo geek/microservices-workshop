@@ -8,7 +8,8 @@ echo "Removing any <none> images"
 docker rmi $(docker images | grep '<none>' | awk '{print $3}')
 echo "Removing fuge images"
 docker rmi $(docker images | grep 'fuge_' | awk '{print $3}')
-
+echo "Removing challenge images"
+docker rmi $(docker images | grep 'challenge' | awk '{print $3}')
 
 # echo "Removing tutum image"
 # docker rmi $(docker images | grep '^tutum' | awk '{print $3}')

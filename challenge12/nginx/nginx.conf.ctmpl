@@ -1,7 +1,7 @@
 user  nginx;
 worker_processes  1;
 
-error_log  /var/log/nginx/error.log warn;
+error_log  /var/log/nginx/error.log error;
 pid        /var/run/nginx.pid;
 
 events {
@@ -46,9 +46,11 @@ http {
         }
 
         {{ if service "frontend" }}
-        location ^~ / {
+        location / {
             proxy_pass http://frontend;
             proxy_redirect off;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
         }{{end}}
     }
 }

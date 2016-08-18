@@ -41,6 +41,8 @@ exports.getServices = internals.getServices = function (name, callback) {
     response.on('end', () => {
       const hosts = [];
       const parsed = parse(result) || [];
+      console.log('------ CONSUL RESPONSE ------');
+      console.log(result);
       for (let i = 0; i < parsed.length; ++i) {
         hosts.push({
           address: parsed[i].Service.Address,

@@ -23,13 +23,15 @@ let actuator = {
   }
 };
 
+let loadingSerializer = false;
 const loadSerializer = function () {
-  if (serializer.use) {
+  if (serializer.use || loadingSerializer) {
     return;
   }
 
+  loadingSerializer = true;
   Consul.getService('serializer', (err, serializerService) => {
-    if (err || !serializerService || !serializerService.port) {
+    if (err || !serializerService || !serializerService.address) {
       return retry(loadSerializer);
     }
 
@@ -38,16 +40,19 @@ const loadSerializer = function () {
       host: serializerService.address,
       port: serializerService.port
     });
+    loadingSerializer = false;
   });
 };
 
+let loadingActuator = false;
 const loadActuator = function () {
-  if (actuator.use) {
+  if (actuator.use || loadingActuator) {
     return;
   }
 
+  loadingActuator = true;
   Consul.getService('actuator', (err, actuatorService) => {
-    if (err || !actuatorService || !actuatorService.port) {
+    if (err || !actuatorService || !actuatorService.address) {
       return retry(loadActuator);
     }
 
@@ -56,6 +61,7 @@ const loadActuator = function () {
       host: actuatorService.address,
       port: actuatorService.port
     });
+    loadingActuator = false;
   });
 };
 
@@ -66,7 +72,7 @@ const retry = function (fn) {
 };
 
 
-const main = function (serializer, actuator) {
+const main = function () {
   loadSerializer();
   loadActuator();
 
@@ -142,6 +148,7 @@ const main = function (serializer, actuator) {
             toEmit.push(point);
           }
         });
+
         if (toEmit.length) {
           console.log('will emit');
           console.log(toEmit);
@@ -156,3 +163,22 @@ const main = function (serializer, actuator) {
   });
 };
 main();
+
+
+process.on('SIGHUP', function () {
+  console.log('------ SIGHUP ------');
+  serializer = {
+    act: function (cmd, cb) {
+      cb(null, {});
+    }
+  };
+
+  actuator = {
+    act: function (cmd, cb) {
+      cb(null, {});
+    }
+  };
+
+  loadSerializer();
+  loadActuator();
+});

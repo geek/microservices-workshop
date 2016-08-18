@@ -18,13 +18,15 @@ let sensor = {
   }
 };
 
+let loadingSerializer = false;
 const loadSerializer = function () {
-  if (serializer.use) {
+  if (serializer.use || loadingSerializer) {
     return;
   }
 
+  loadingSerializer = true;
   Consul.getService('serializer', (err, serializerService) => {
-    if (err || !serializerService) {
+    if (err || !serializerService || !serializerService.address) {
       return retry(loadSerializer);
     }
 
@@ -33,17 +35,20 @@ const loadSerializer = function () {
       host: serializerService.address,
       port: serializerService.port
     });
+    loadingSerializer = false;
   });
 };
 
 
+let loadingSensor = false;
 const loadSensor = function () {
-  if (sensor.use) {
+  if (sensor.use || loadingSensor) {
     return;
   }
 
+  loadingSensor = true;
   Consul.getService('sensor', (err, sensorService) => {
-    if (err || !sensorService) {
+    if (err || !sensorService || !sensorService.address) {
       return retry(loadSensor);
     }
 
@@ -52,6 +57,7 @@ const loadSensor = function () {
       host: sensorService.address,
       port: sensorService.port
     });
+    loadingSensor = false;
   });
 };
 
@@ -90,6 +96,18 @@ main();
 
 
 process.on('SIGHUP', function () {
+  serializer = {
+    act: function (cmd, cb) {
+      cb(null, {});
+    }
+  };
+
+  sensor = {
+    act: function (cmd, cb) {
+      cb(null, {});
+    }
+  };
+
   loadSerializer();
   loadSensor();
 });
